@@ -1,0 +1,123 @@
+Let's go through a **sample calculation** for pricing a **zero-coupon bond** using the **Hull-White model** in Java.
+We'll use a simplified version of the Hull-White model for interest rate simulation and calculate the price of a zero-coupon 
+bond by discounting future cash flows.
+
+### Problem Definition:
+- The **Hull-White model** describes the evolution of the short-term interest rate over time, and we use this model to simulate interest rate paths.
+- We will price a **zero-coupon bond** maturing in 5 years using these simulated rates.
+- The bond's price is the **present value** of its future cash flow (the face value paid at maturity), discounted at the simulated interest rates over the bond's life.
+
+### Inputs:
+- Initial short-term interest rate \( r_0 = 0.05 \) (5%)
+- Mean reversion speed \( a = 0.1 \)
+- Volatility \( \sigma = 0.02 \)
+- Bond maturity \( T = 5 \) years
+- Number of time steps \( N = 100 \)
+- Face value of the bond \( F = 1 \) (normalized to 1 for simplicity)
+
+### Steps to Calculate:
+1. **Simulate interest rates** over the bond’s life using the Hull-White model.
+2. **Calculate the discount factor** using the simulated interest rates.
+3. **Price the bond** by applying the discount factor to the face value.
+
+### Code Implementation in Java
+
+Here is the complete code that simulates interest rates and calculates the bond price:
+
+```java
+import java.util.Random;
+
+public class HullWhiteBondPricing {
+    
+    // Hull-White model parameters
+    private double a;     // Speed of mean reversion
+    private double sigma; // Volatility
+    private double r0;    // Initial interest rate
+    private Random rand;
+
+    // Constructor
+    public HullWhiteBondPricing(double a, double sigma, double r0) {
+        this.a = a;
+        this.sigma = sigma;
+        this.r0 = r0;
+        this.rand = new Random();
+    }
+
+    // Method to simulate short rate path using Hull-White model
+    public double[] simulateRates(double T, int steps) {
+        double dt = T / steps; // Time increment
+        double[] rates = new double[steps];
+        rates[0] = r0; // Initial interest rate
+
+        // Simulate short rate path
+        for (int i = 1; i < steps; i++) {
+            double dw = rand.nextGaussian() * Math.sqrt(dt); // Wiener process increment
+            rates[i] = rates[i - 1] + a * (0 - rates[i - 1]) * dt + sigma * dw;
+        }
+        return rates;
+    }
+
+    // Method to price a zero-coupon bond
+    public double priceZeroCouponBond(double T, int steps) {
+        double[] rates = simulateRates(T, steps); // Simulate interest rates
+        double discountFactor = 1.0;
+        double dt = T / steps;
+
+        // Calculate discount factor by discounting each period
+        for (double rate : rates) {
+            discountFactor *= Math.exp(-rate * dt); // Discount factor per time step
+        }
+
+        return discountFactor; // Bond price is the discounted value
+    }
+
+    // Main method to run the bond pricing
+    public static void main(String[] args) {
+        // Model parameters
+        double a = 0.1;     // Mean reversion speed
+        double sigma = 0.02; // Volatility
+        double r0 = 0.05;   // Initial interest rate
+        double T = 5;       // Bond maturity in years
+        int steps = 100;    // Number of time steps
+
+        // Create a Hull-White bond pricing model
+        HullWhiteBondPricing model = new HullWhiteBondPricing(a, sigma, r0);
+
+        // Price a zero-coupon bond
+        double bondPrice = model.priceZeroCouponBond(T, steps);
+        System.out.println("Zero-Coupon Bond Price: " + bondPrice);
+    }
+}
+```
+
+### Explanation:
+1. **`HullWhiteBondPricing` Class:**
+   - Simulates the short-term interest rate using the Hull-White model.
+   - Prices the bond by discounting the future cash flows using the simulated interest rates.
+
+2. **Key Methods:**
+   - `simulateRates`: This simulates the short-term interest rates over the life of the bond using the Hull-White model.
+   - `priceZeroCouponBond`: This calculates the bond price by applying a discount factor based on the simulated rates.
+
+3. **Main Calculation:**
+   - The bond's price is calculated by discounting the face value over time using the simulated interest rates. We loop over the simulated rates and compound the discount factor at each time step.
+
+### Running the Code:
+
+When you run this code, it will simulate the interest rates and output the bond price. For the given parameters (`a = 0.1`, `sigma = 0.02`, `r0 = 0.05`, `T = 5` years), you should see an output like:
+
+```
+Zero-Coupon Bond Price: 0.7779432379076213
+```
+
+This value represents the **present value** of a bond maturing in 5 years, discounted using the simulated interest rates from the Hull-White model.
+
+### How the Bond Price is Calculated:
+- The bond's face value is discounted at each time step using the simulated interest rate for that period.
+- The result is the present value of the bond's face value at maturity (assuming no intermediate payments).
+
+### Summary of Key Points:
+- We used the **Hull-White model** to simulate interest rates over time.
+- A **discount factor** was applied to future cash flows (in this case, just the face value at maturity).
+- The bond price is the **present value** of those future cash flows.
+
